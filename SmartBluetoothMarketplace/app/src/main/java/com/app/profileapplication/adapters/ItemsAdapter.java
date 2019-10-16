@@ -15,11 +15,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.profileapplication.R;
 import com.app.profileapplication.models.Items;
+import com.app.profileapplication.utilities.CircleTransform;
+import com.app.profileapplication.utilities.Parameters;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> {
 
+    private static final String TAG = "ItemsAdapter";
     Context context;
     ArrayList<Items> items;
     ItemsCartInterface itemsCartInterface;
@@ -44,13 +48,10 @@ public class ItemsAdapter extends RecyclerView.Adapter<ItemsAdapter.ViewHolder> 
         holder.itemName.setText(items.get(position).getItemName());
         holder.price.setText("$ " + String.valueOf(items.get(position).getPrice()));
         holder.price.setPaintFlags(holder.price.getPaintFlags()| Paint.STRIKE_THRU_TEXT_FLAG);
-
-        String r =items.get(position).getPhoto().split(".png",2)[0];
-        int id= context.getResources().getIdentifier(r, "drawable", context.getPackageName());
-
         holder.discountPrice.setText("$ "+String.valueOf(items.get(position).getDiscount()));
-        if(id>0)
-            holder.itemImage.setImageResource(id);
+        Picasso.get()
+                .load(Parameters.API_URL+"/"+items.get(position).getPhoto())
+                .into(holder.itemImage);
         holder.addToCart.setOnClickListener(view -> {
             itemsCartInterface.addToCart(items.get(position));
         });

@@ -99,7 +99,6 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
                 Beacon nearestBeacon = list.get(0);
                 String tempRegion = placesNearBeacon(nearestBeacon);
                 if (itemRegion==null && !tempRegion.equalsIgnoreCase(itemRegion)){
-                    //beaconManager.stopRanging(region);
                     itemRegion = tempRegion;
                     Log.d("Airport", "Nearest places: " + itemRegion);
                     String responseString = getData(Parameters.API_URL+"/item/getItemsRegion?region="+itemRegion, view);
@@ -108,31 +107,6 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
                 String responseString = getData(Parameters.API_URL+"/item/getItems", view);
             }
         });
-
-        /*beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override
-            public void onServiceReady() {
-                beaconManager.startMonitoring(new BeaconRegion(
-                        "monitored region",
-                        UUID.fromString("B9407F30-F5F8-466E-AFF9-25556B57FE6D"),
-                        null, null));
-            }
-        });
-
-        beaconManager.setMonitoringListener(new BeaconManager.BeaconMonitoringListener() {
-            @Override
-            public void onEnteredRegion(BeaconRegion region, List<Beacon> beacons) {
-                Beacon beacon = beacons.get(0);
-                String itemRegion = placesNearBeacon(beacon);
-                Log.d("Airport", "Nearest places: " + itemRegion);
-                String responseString = getData(Parameters.API_URL+"/item/getItemsRegion?region="+itemRegion, view);
-            }
-            @Override
-            public void onExitedRegion(BeaconRegion region) {
-                // could add an "exit" notification too if you want (-:
-                Log.v("Airport", "Beacon Exited");
-            }
-        });*/
 
         token = getArguments().getString(Parameters.TOKEN);
         user = (User) getArguments().getSerializable(Parameters.USER_ID);
@@ -199,12 +173,6 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
                     getActivity().runOnUiThread(() -> {
                         itemsAdapter = new ItemsAdapter(getContext(), itemsArrayList, ItemsFragment.this::addToCart);
                         recyclerView.setAdapter(itemsAdapter);
-                        /*beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-                            @Override
-                            public void onServiceReady() {
-                                beaconManager.startRanging(region);
-                            }
-                        });*/
                     });
 
                 } catch (JSONException e) {
