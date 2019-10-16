@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -79,8 +80,12 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
     // TODO: replace "<major>:<minor>" strings to match your own beacons.
     static {
         Map<String, String> placesByBeacons = new HashMap<>();
-        placesByBeacons.put("15326:56751", "grocery");
-        placesByBeacons.put("37360:28840", "produce");
+        placesByBeacons.put("15326:56751", "lifestyle");
+        placesByBeacons.put("41072:44931", "produce");
+        placesByBeacons.put("47152:61548","grocery");
+        //placesByBeacons.put("30462:43265","lifestyle");
+        //placesByBeacons.put("26535:44799", "produce");
+        //placesByBeacons.put("30476:29902","lifestyle");
         PLACES_BY_BEACONS = Collections.unmodifiableMap(placesByBeacons);
     }
 
@@ -98,13 +103,15 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
             if (!list.isEmpty()) {
                 Beacon nearestBeacon = list.get(0);
                 String tempRegion = placesNearBeacon(nearestBeacon);
-                if (itemRegion==null && !tempRegion.equalsIgnoreCase(itemRegion)){
+                Log.d("Airport", "MeasuredPower: "+nearestBeacon.getMeasuredPower() + ", list size: " + list.size() + "--" + tempRegion);
+                if (tempRegion!=null && !tempRegion.equalsIgnoreCase(itemRegion)){
                     itemRegion = tempRegion;
-                    Log.d("Airport", "Nearest places: " + itemRegion);
+                    Log.d("Airport", "Nearest places: " + itemRegion + nearestBeacon.getMeasuredPower());
                     String responseString = getData(Parameters.API_URL+"/item/getItemsRegion?region="+itemRegion, view);
+                }else if(tempRegion==null && itemRegion!=null){
+                    itemRegion=null;
+                    String responseString = getData(Parameters.API_URL+"/item/getItems", view);
                 }
-            }else {
-                String responseString = getData(Parameters.API_URL+"/item/getItems", view);
             }
         });
 
@@ -154,22 +161,24 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
 
                         String key= keys.next();
                         JSONObject single_item = jsonObject.getJSONObject(key);
-                        Double disountedPrice = single_item.getDouble(Parameters.ITEMS_ITEM_PRICE);
+                        Double discountedPrice = single_item.getDouble(Parameters.ITEMS_ITEM_PRICE);
 
                         if (single_item.getDouble(Parameters.ITEMS_ITEM_DISCOUNT)>0)
-                            disountedPrice = single_item.getDouble(Parameters.ITEMS_ITEM_PRICE) - ( single_item.getDouble(Parameters.ITEMS_ITEM_PRICE)* single_item.getDouble(Parameters.ITEMS_ITEM_DISCOUNT)/100);
+                            discountedPrice = single_item.getDouble(Parameters.ITEMS_ITEM_PRICE) - ( single_item.getDouble(Parameters.ITEMS_ITEM_PRICE)* single_item.getDouble(Parameters.ITEMS_ITEM_DISCOUNT)/100);
 
                         Items items1 = new Items(
                                 single_item.getString(Parameters.ITEMS_ITEM_NAME),
                                 single_item.getString(Parameters.ITEMS_ITEM_REGION),
                                 single_item.getString(Parameters.ITEMS_ITEM_ID),
-                                Double.valueOf(df2.format(disountedPrice)),
+                                Double.valueOf(df2.format(discountedPrice)),
                                 single_item.getDouble(Parameters.ITEMS_ITEM_PRICE),
                                 single_item.getString(Parameters.ITEMS_ITEM_PHOTO)
                         );
                         itemsArrayList.add(items1);
 
                     }
+                    Comparator<Items> compareByRegion = (Items o1, Items o2) -> o1.getRegion().compareTo( o2.getRegion() );
+                    Collections.sort(itemsArrayList, compareByRegion);
                     getActivity().runOnUiThread(() -> {
                         itemsAdapter = new ItemsAdapter(getContext(), itemsArrayList, ItemsFragment.this::addToCart);
                         recyclerView.setAdapter(itemsAdapter);
