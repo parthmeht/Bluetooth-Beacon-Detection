@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.profileapplication.R;
 import com.app.profileapplication.models.CartItems;
+import com.app.profileapplication.utilities.Parameters;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -45,10 +47,9 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder>{
 
         holder.itemName.setText(items.get(position).getItemName());
         holder.price.setText("$ " + String.valueOf(items.get(position).getPrice()));
-        String r =items.get(position).getPhoto().split(".png",2)[0];
-        int id= context.getResources().getIdentifier(r, "drawable", context.getPackageName());
-        if(id>0)
-            holder.itemImage.setImageResource(id);
+        Picasso.get()
+                .load(Parameters.API_URL+"/"+items.get(position).getPhoto())
+                .into(holder.itemImage);
         holder.remove.setOnClickListener(view -> {
             Log.d("Remove", "Selected "+ items.get(position).get_id());
             removeItem.removeItem(items.get(position), position);

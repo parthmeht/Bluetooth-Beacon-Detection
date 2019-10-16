@@ -180,6 +180,11 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
                     Comparator<Items> compareByRegion = (Items o1, Items o2) -> o1.getRegion().compareTo( o2.getRegion() );
                     Collections.sort(itemsArrayList, compareByRegion);
                     getActivity().runOnUiThread(() -> {
+                        if (itemRegion!=null){
+                            Toast.makeText(getContext(),itemRegion, Toast.LENGTH_LONG).show();
+                        }else {
+                            Toast.makeText(getContext(),"All Products", Toast.LENGTH_LONG).show();
+                        }
                         itemsAdapter = new ItemsAdapter(getContext(), itemsArrayList, ItemsFragment.this::addToCart);
                         recyclerView.setAdapter(itemsAdapter);
                     });
