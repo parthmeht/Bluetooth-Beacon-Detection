@@ -126,35 +126,43 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
                     }
 
                 }
-                String tempRegion = placesNearBeacon(nearestBeacon);
-
+                Log.d("MEA", nearestBeacon.getProximityUUID().toString());
+                String tempRegion;
                 if(count<6){
+                    tempRegion = placesNearBeacon(nearestBeacon);
                     beaconCount.put(tempRegion, beaconCount.get(tempRegion)+1);
                     Log.d("COUNT", String.valueOf(count)+ " REGION : "+tempRegion);
                 }
                 else{
+                    tempRegion = placesNearBeacon(nearestBeacon);
                     count = 0;
                     Map.Entry<String, Integer> maxEntry = null;
                     for (Map.Entry<String, Integer> entry : beaconCount.entrySet()) {
                         Log.d("COUNT", String.valueOf(maxEntry==null));
-                        if (maxEntry == null
-                                || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
-                            Log.d("COUNT", String.valueOf(entry));
+                        if(maxEntry == null)
                             maxEntry = entry;
+                        else{
+                            if(maxEntry.getValue() < entry.getValue())
+                                maxEntry = entry;
                         }
+//                        if (maxEntry == null
+//                                || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
+//                            Log.d("COUNT", String.valueOf(entry));
+//                            maxEntry = entry;
+//                        }
                         entry.setValue(0);
                     }
                     Log.d("MaxEntry",maxEntry.getKey());
 
-                    if (tempRegion!=null && !tempRegion.equalsIgnoreCase(itemRegion)){
-                        itemRegion = tempRegion;
+                    if (maxEntry.getKey()!=null && !maxEntry.getKey().equalsIgnoreCase(itemRegion)){
+                        itemRegion = maxEntry.getKey();
 //                    Log.d("Airport", "Nearest places: " + itemRegion + nearestBeacon.getMeasuredPower());
                         getActivity().runOnUiThread(() -> {
-                            itemsAdapter = new ItemsAdapter(getContext(), hm.get(tempRegion), ItemsFragment.this::addToCart);
+                            itemsAdapter = new ItemsAdapter(getContext(), hm.get(itemRegion), ItemsFragment.this::addToCart);
                             recyclerView.setAdapter(itemsAdapter);
                             Toast.makeText(getContext(),itemRegion, Toast.LENGTH_LONG).show();
                         });
-                    }else if(tempRegion==null && itemRegion!=null){
+                    }else if(maxEntry.getKey()==null && itemRegion!=null){
                         itemRegion=null;
                         getActivity().runOnUiThread(() -> {
                             itemsAdapter = new ItemsAdapter(getContext(), hm.get("all"), ItemsFragment.this::addToCart);
