@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,13 @@ import okhttp3.ResponseBody;
 public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInterface {
 
     RecyclerView recyclerView;
+    Map<String,ArrayList<Items>> hm = new HashMap<>();
     ArrayList<Items> itemsAdded = new ArrayList<>();
+    /*ArrayList<Items> fullItemsArrayList = new ArrayList();
+    ArrayList<Items> produceItemsArrayList = new ArrayList();
+    ArrayList<Items> groceryItemsArrayList = new ArrayList();
+    ArrayList<Items> lifestyleItemsArrayList = new ArrayList();*/
+
     public static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private OkHttpClient client = new OkHttpClient();
     String message;
@@ -107,10 +114,18 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
                 if (tempRegion!=null && !tempRegion.equalsIgnoreCase(itemRegion)){
                     itemRegion = tempRegion;
                     Log.d("Airport", "Nearest places: " + itemRegion + nearestBeacon.getMeasuredPower());
-                    String responseString = getData(Parameters.API_URL+"/item/getItemsRegion?region="+itemRegion, view);
+                    getActivity().runOnUiThread(() -> {
+                        itemsAdapter = new ItemsAdapter(getContext(), hm.get(tempRegion), ItemsFragment.this::addToCart);
+                        recyclerView.setAdapter(itemsAdapter);
+                        Toast.makeText(getContext(),itemRegion, Toast.LENGTH_LONG).show();
+                    });
                 }else if(tempRegion==null && itemRegion!=null){
                     itemRegion=null;
-                    String responseString = getData(Parameters.API_URL+"/item/getItems", view);
+                    getActivity().runOnUiThread(() -> {
+                        itemsAdapter = new ItemsAdapter(getContext(), hm.get("all"), ItemsFragment.this::addToCart);
+                        recyclerView.setAdapter(itemsAdapter);
+                        Toast.makeText(getContext(),"All Products", Toast.LENGTH_LONG).show();
+                    });
                 }
             }
         });
@@ -119,7 +134,14 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
         user = (User) getArguments().getSerializable(Parameters.USER_ID);
         recyclerView = view.findViewById(R.id.fragment_items_recyclerview);
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 2));
-        String responseString = getData(Parameters.API_URL+"/item/getItems", view);
+        //fullItemsArrayList = getData(Parameters.API_URL+"/item/getItems", view);
+        //produceItemsArrayList = getData(Parameters.API_URL+"/item/getItemsRegion?region=produce", view);
+        //groceryItemsArrayList = getData(Parameters.API_URL+"/item/getItemsRegion?region=grocery", view);
+        //lifestyleItemsArrayList = getData(Parameters.API_URL+"/item/getItemsRegion?region=lifestyle", view);
+        hm.put("all",getData(Parameters.API_URL+"/item/getItems", view));
+        hm.put("produce",getData(Parameters.API_URL+"/item/getItemsRegion?region=produce", view));
+        hm.put("grocery",getData(Parameters.API_URL+"/item/getItemsRegion?region=grocery", view));
+        hm.put("lifestyle",getData(Parameters.API_URL+"/item/getItemsRegion?region=lifestyle", view));
         checkoutButton = view.findViewById(R.id.fragment_items_checkout);
         checkoutButton.setOnClickListener(view1 -> {
             Bundle bundle = new Bundle();
@@ -137,7 +159,7 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
         return view;
     }
 
-    public String getData(String url, View view){
+    public ArrayList<Items> getData(String url, View view){
         OkHttpClient client = new OkHttpClient();
         ArrayList<Items> itemsArrayList = new ArrayList();
         final String[] responseString = new String[1];
@@ -195,7 +217,7 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
 
             }
         });
-        return responseString[0];
+        return itemsArrayList;
 
     }
 
