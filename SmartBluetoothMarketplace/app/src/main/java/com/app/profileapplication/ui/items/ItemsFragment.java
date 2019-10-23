@@ -72,6 +72,8 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
     private BeaconManager beaconManager;
     private BeaconRegion region;
     private static final String TAG = "ItemsFragment";
+    HashMap<String, Integer> beaconCount = new HashMap<>();
+    int count = 0;
 
     private User user;
     private static DecimalFormat df2 = new DecimalFormat("#.##");
@@ -87,8 +89,8 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
     // TODO: replace "<major>:<minor>" strings to match your own beacons.
     static {
         Map<String, String> placesByBeacons = new HashMap<>();
-        placesByBeacons.put("15326:56751", "lifestyle");
-        placesByBeacons.put("41072:44931", "produce");
+        placesByBeacons.put("45849:31668", "lifestyle");
+        placesByBeacons.put("21839:34812", "produce");
         placesByBeacons.put("47152:61548","grocery");
         //placesByBeacons.put("30462:43265","lifestyle");
         //placesByBeacons.put("26535:44799", "produce");
@@ -105,28 +107,66 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
         beaconManager = new BeaconManager(getContext());
         region = new BeaconRegion("ranged region",
                 null, null, null);
+        beaconCount.put("lifestyle", 0);
+        beaconCount.put("produce", 0);
+        beaconCount.put("grocery", 0);
 
         beaconManager.setRangingListener((BeaconManager.BeaconRangingListener) (region, list) -> {
+            Log.d("SDA","SDA");
             if (!list.isEmpty()) {
-                Beacon nearestBeacon = list.get(0);
-                String tempRegion = placesNearBeacon(nearestBeacon);
-                Log.d("Airport", "MeasuredPower: "+nearestBeacon.getMeasuredPower() + ", list size: " + list.size() + "--" + tempRegion);
-                if (tempRegion!=null && !tempRegion.equalsIgnoreCase(itemRegion)){
-                    itemRegion = tempRegion;
-                    Log.d("Airport", "Nearest places: " + itemRegion + nearestBeacon.getMeasuredPower());
-                    getActivity().runOnUiThread(() -> {
-                        itemsAdapter = new ItemsAdapter(getContext(), hm.get(tempRegion), ItemsFragment.this::addToCart);
-                        recyclerView.setAdapter(itemsAdapter);
-                        Toast.makeText(getContext(),itemRegion, Toast.LENGTH_LONG).show();
-                    });
-                }else if(tempRegion==null && itemRegion!=null){
-                    itemRegion=null;
-                    getActivity().runOnUiThread(() -> {
-                        itemsAdapter = new ItemsAdapter(getContext(), hm.get("all"), ItemsFragment.this::addToCart);
-                        recyclerView.setAdapter(itemsAdapter);
-                        Toast.makeText(getContext(),"All Products", Toast.LENGTH_LONG).show();
-                    });
+                Log.d("Beacons ", list.toString());
+                count++;
+                Beacon nearestBeacon=null;
+
+                for(Beacon nBeacon:list){
+                    if (PLACES_BY_BEACONS.containsKey(nBeacon.getMajor()+":"+nBeacon.getMinor())){
+                        nearestBeacon=nBeacon;
+
+                        break;
+                    }
+
                 }
+                String tempRegion = placesNearBeacon(nearestBeacon);
+
+                if(count<6){
+                    beaconCount.put(tempRegion, beaconCount.get(tempRegion)+1);
+                    Log.d("COUNT", String.valueOf(count)+ " REGION : "+tempRegion);
+                }
+                else{
+                    count = 0;
+                    Map.Entry<String, Integer> maxEntry = null;
+                    for (Map.Entry<String, Integer> entry : beaconCount.entrySet()) {
+                        Log.d("COUNT", String.valueOf(maxEntry==null));
+                        if (maxEntry == null
+                                || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
+                            Log.d("COUNT", String.valueOf(entry));
+                            maxEntry = entry;
+                        }
+                        entry.setValue(0);
+                    }
+                    Log.d("MaxEntry",maxEntry.getKey());
+
+                    if (tempRegion!=null && !tempRegion.equalsIgnoreCase(itemRegion)){
+                        itemRegion = tempRegion;
+//                    Log.d("Airport", "Nearest places: " + itemRegion + nearestBeacon.getMeasuredPower());
+                        getActivity().runOnUiThread(() -> {
+                            itemsAdapter = new ItemsAdapter(getContext(), hm.get(tempRegion), ItemsFragment.this::addToCart);
+                            recyclerView.setAdapter(itemsAdapter);
+                            Toast.makeText(getContext(),itemRegion, Toast.LENGTH_LONG).show();
+                        });
+                    }else if(tempRegion==null && itemRegion!=null){
+                        itemRegion=null;
+                        getActivity().runOnUiThread(() -> {
+                            itemsAdapter = new ItemsAdapter(getContext(), hm.get("all"), ItemsFragment.this::addToCart);
+                            recyclerView.setAdapter(itemsAdapter);
+                            Toast.makeText(getContext(),"All Products", Toast.LENGTH_LONG).show();
+                        });
+                    }
+
+
+                }
+//                String tempRegion = placesNearBeacon(nearestBeacon);
+                Log.d("Airport", "MeasuredPower: " + count + " --- " +nearestBeacon.getMeasuredPower() + ", list size: " + list.size() + "--" + tempRegion);
             }
         });
 
