@@ -89,12 +89,12 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
     // TODO: replace "<major>:<minor>" strings to match your own beacons.
     static {
         Map<String, String> placesByBeacons = new HashMap<>();
-        placesByBeacons.put("45849:31668", "lifestyle");
-        placesByBeacons.put("21839:34812", "produce");
+//        placesByBeacons.put("45849:31668", "lifestyle");
+//        placesByBeacons.put("21839:34812", "produce");
+//        placesByBeacons.put("47152:61548","grocery");
+        placesByBeacons.put("15326:56751","lifestyle");
+        placesByBeacons.put("41072:44931", "produce");
         placesByBeacons.put("47152:61548","grocery");
-        //placesByBeacons.put("30462:43265","lifestyle");
-        //placesByBeacons.put("26535:44799", "produce");
-        //placesByBeacons.put("30476:29902","lifestyle");
         PLACES_BY_BEACONS = Collections.unmodifiableMap(placesByBeacons);
     }
 
@@ -115,54 +115,60 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
             Log.d("SDA","SDA");
             if (!list.isEmpty()) {
                 Log.d("Beacons ", list.toString());
-                count++;
+
                 Beacon nearestBeacon=null;
 
                 for(Beacon nBeacon:list){
                     if (PLACES_BY_BEACONS.containsKey(nBeacon.getMajor()+":"+nBeacon.getMinor())){
                         nearestBeacon=nBeacon;
-
                         break;
                     }
-
                 }
-                Log.d("MEA", nearestBeacon.getProximityUUID().toString());
+//                Log.d("MEA", nearestBeacon.getProximityUUID().toString());
                 String tempRegion;
-                if(count<6){
+                if(count<3 && nearestBeacon!=null){
+                    count++;
                     tempRegion = placesNearBeacon(nearestBeacon);
                     beaconCount.put(tempRegion, beaconCount.get(tempRegion)+1);
                     Log.d("COUNT", String.valueOf(count)+ " REGION : "+tempRegion);
                 }
-                else{
-                    tempRegion = placesNearBeacon(nearestBeacon);
+                else if(nearestBeacon!=null){
+//                    tempRegion = placesNearBeacon(nearestBeacon);
                     count = 0;
                     Map.Entry<String, Integer> maxEntry = null;
+                    int compareVariable = 0;
+                    String maxString = "";
                     for (Map.Entry<String, Integer> entry : beaconCount.entrySet()) {
-                        Log.d("COUNT", String.valueOf(maxEntry==null));
-                        if(maxEntry == null)
-                            maxEntry = entry;
-                        else{
-                            if(maxEntry.getValue() < entry.getValue())
-                                maxEntry = entry;
+                        Log.d("COUNNT", entry.getValue().toString() + " -- " + entry.getKey());
+                        if(compareVariable == 0){
+                            maxString = entry.getKey();
+                            compareVariable = entry.getValue();
                         }
-//                        if (maxEntry == null
-//                                || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
-//                            Log.d("COUNT", String.valueOf(entry));
-//                            maxEntry = entry;
-//                        }
+                        else
+                        {
+                            if(compareVariable < entry.getValue()){
+                                maxString = entry.getKey();
+                                compareVariable =entry.getValue();
+                            }
+
+                        }
+
                         entry.setValue(0);
                     }
-                    Log.d("MaxEntry",maxEntry.getKey());
+                    Log.d("MaxEntry",maxString + " == " + itemRegion);
 
-                    if (maxEntry.getKey()!=null && !maxEntry.getKey().equalsIgnoreCase(itemRegion)){
-                        itemRegion = maxEntry.getKey();
-//                    Log.d("Airport", "Nearest places: " + itemRegion + nearestBeacon.getMeasuredPower());
+                    if (maxString!="" && !maxString.equals(itemRegion)){
+
+                        itemRegion = maxString;
+
                         getActivity().runOnUiThread(() -> {
                             itemsAdapter = new ItemsAdapter(getContext(), hm.get(itemRegion), ItemsFragment.this::addToCart);
                             recyclerView.setAdapter(itemsAdapter);
                             Toast.makeText(getContext(),itemRegion, Toast.LENGTH_LONG).show();
                         });
-                    }else if(maxEntry.getKey()==null && itemRegion!=null){
+                    }
+                    else if (maxString == "" && itemRegion != null){
+//                    else if(maxEntry.getKey()==null && itemRegion!=null){
                         itemRegion=null;
                         getActivity().runOnUiThread(() -> {
                             itemsAdapter = new ItemsAdapter(getContext(), hm.get("all"), ItemsFragment.this::addToCart);
@@ -174,7 +180,7 @@ public class ItemsFragment extends Fragment implements ItemsAdapter.ItemsCartInt
 
                 }
 //                String tempRegion = placesNearBeacon(nearestBeacon);
-                Log.d("Airport", "MeasuredPower: " + count + " --- " +nearestBeacon.getMeasuredPower() + ", list size: " + list.size() + "--" + tempRegion);
+//                Log.d("Airport", "MeasuredPower: " + count + " --- " +nearestBeacon.getMeasuredPower() + ", list size: " + list.size() + "--" + tempRegion);
             }
         });
 
